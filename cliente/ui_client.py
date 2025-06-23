@@ -1,102 +1,98 @@
 import gi
 gi.require_version("Gtk", "3.0")
-import matplotlib.pyplot as ax
-from gi.repository import Gtk
+import matplotlib.pyplot as plt
+from gi.repository import Gtk, Gdk, Pango
 from matplotlib.backends.backend_gtk3agg import FigureCanvasGTK3Agg as FigureCanvas
-from matplotlib.figure import Figure
 from cliente.transmitter import Transmitter
 import numpy as np
 from camada_enlace.enquadramento import contagem_caracteres, insercao_bytes
 from camada_enlace.deteccao_erros import bit_paridade, crc
 from camada_enlace.hamming import hamming_encode
 
-
 class ClientUI(Gtk.Window):
     def __init__(self):
         super().__init__(title="Transmissor")
         self.set_border_width(10)
-        self.set_default_size(800, 600)
+        self.set_default_size(900, 700)
 
         self.transmitter = Transmitter()
-        self.username = None  # Variável para armazenar o nome do usuário
-
-        # Exibe o popup para capturar o nome
+        self.username = None
         self.show_name_dialog()
 
-
-
-    
+        # HeaderBar 
+        header = Gtk.HeaderBar(title="Transmissor de Dados")
+        header.set_subtitle("Envio e visualização de sinais")
+        header.set_show_close_button(True)
+        self.set_titlebar(header)
 
         # Layout principal
-        self.vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+        self.vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         self.add(self.vbox)
-
 
         # Entrada de texto
         self.entry = Gtk.Entry()
         self.entry.set_placeholder_text("Digite o texto para transmitir")
+        self.entry.set_margin_bottom(5)
+        self.entry.set_margin_top(5)
         self.vbox.pack_start(self.entry, False, False, 0)
 
-        # Box modulação
-        self.modulation_combo = Gtk.ComboBoxText()
-        self.modulation_combo.append("NRZ", "NRZ")
-        self.modulation_combo.append("Manchester", "Manchester")
-        self.modulation_combo.append("Bipolar", "Bipolar")
-        self.modulation_combo.set_active(0)
-        self.vbox.pack_start(self.modulation_combo, False, False, 0)
+        # Configurações (agrupadas)
+        config_box = Gtk.Box(spacing=10)
+        self.vbox.pack_start(config_box, False, False, 0)
 
-        self.carrier_modulation_combo = Gtk.ComboBoxText()
-        self.carrier_modulation_combo.append("ASK", "ASK")
-        self.carrier_modulation_combo.append("FSK", "FSK")
-        self.carrier_modulation_combo.append("8QAM", "8QAM")
-        self.carrier_modulation_combo.set_active(0)
-        self.vbox.pack_start(self.carrier_modulation_combo, False, False, 0)
+        self.modulation_combo = self.create_combo("Modulação Digital", ["NRZ", "Manchester", "Bipolar"])
+        config_box.pack_start(self.modulation_combo, True, True, 0)
 
-        # Box Enquadramento
-        self.framing_combo = Gtk.ComboBoxText()
-        self.framing_combo.append("Contagem de caracteres", "Contagem de caracteres")
-        self.framing_combo.append("Inserção de bytes", "Inserção de bytes")
-        self.framing_combo.set_active(0)
-        self.vbox.pack_start(self.framing_combo, False, False, 0)
+        self.carrier_modulation_combo = self.create_combo("Modulação por Portadora", ["ASK", "FSK", "8QAM"])
+        config_box.pack_start(self.carrier_modulation_combo, True, True, 0)
 
-        # Box Detecção de Erros
-        self.error_detection_combo = Gtk.ComboBoxText()
-        self.error_detection_combo.append("Bit de paridade par", "Bit de paridade par")
-        self.error_detection_combo.append("CRC", "CRC")
-        self.error_detection_combo.set_active(0)
-        self.vbox.pack_start(self.error_detection_combo, False, False, 0)
+        self.framing_combo = self.create_combo("Enquadramento", ["Contagem de caracteres", "Inserção de bytes"])
+        config_box.pack_start(self.framing_combo, True, True, 0)
+
+        self.error_detection_combo = self.create_combo("Detecção de Erros", ["Bit de paridade par", "CRC"])
+        config_box.pack_start(self.error_detection_combo, True, True, 0)
 
         # Botão de transmissão
-        self.transmit_button = Gtk.Button(label="Transmitir")
+        self.transmit_button = Gtk.Button(label="🚀 Transmitir")
         self.transmit_button.connect("clicked", self.on_transmit_clicked)
         self.vbox.pack_start(self.transmit_button, False, False, 0)
 
-        # Área de saída de texto com barra de rolagem
+        # Área de saída de texto
         self.scrolled_window = Gtk.ScrolledWindow()
         self.scrolled_window.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-        self.scrolled_window.set_min_content_height(150)
+        self.scrolled_window.set_min_content_height(160)
+        self.scrolled_window.set_hexpand(True)
 
-        self.output_label = Gtk.Label(label="Saída:")
+        self.output_label = Gtk.Label()
         self.output_label.set_line_wrap(True)
-        self.output_label.set_line_wrap_mode(Gtk.WrapMode.WORD)
-        self.output_label.set_justify(Gtk.Justification.LEFT)
         self.output_label.set_xalign(0)
-        self.scrolled_window.add(self.output_label)
 
+        # Fonte monoespaçada para bits e dados
+        monospace = Pango.FontDescription("Monospace 11")
+        self.output_label.modify_font(monospace)
+        self.output_label.modify_fg(Gtk.StateType.NORMAL, Gdk.color_parse("#333"))
+
+        self.scrolled_window.add(self.output_label)
         self.vbox.pack_start(self.scrolled_window, False, False, 0)
 
         # Área do gráfico
         self.canvas = None
         self.figure = None
-        self.ax = None
+
+    def create_combo(self, tooltip, options):
+        combo = Gtk.ComboBoxText()
+        combo.set_tooltip_text(tooltip)
+        for opt in options:
+            combo.append(opt, opt)
+        combo.set_active(0)
+        return combo
 
     def show_name_dialog(self):
-        """Exibe um diálogo para capturar o nome do usuário."""
         dialog = Gtk.Dialog(title="Informe seu Nome", transient_for=self, flags=0)
         dialog.add_buttons(Gtk.STOCK_OK, Gtk.ResponseType.OK)
-
         dialog.set_default_size(300, 100)
         box = dialog.get_content_area()
+        box.set_spacing(6)
 
         label = Gtk.Label(label="Digite seu nome:")
         box.add(label)
@@ -106,138 +102,99 @@ class ClientUI(Gtk.Window):
 
         dialog.show_all()
         response = dialog.run()
-
-        if response == Gtk.ResponseType.OK:
-            self.username = name_entry.get_text().strip()
-
-        if not self.username:  # Se o nome não for fornecido, força o preenchimento
-            self.username = "Usuário Desconhecido"
-
+        self.username = name_entry.get_text().strip() or "Usuário Desconhecido"
         dialog.destroy()
 
     def on_transmit_clicked(self, widget):
         texto = self.entry.get_text()
+        if not texto:
+            self.output_label.set_text("⚠️ Por favor, insira um texto para transmitir.")
+            return
+
         modulation_type = self.modulation_combo.get_active_text()
         carrier_modulation_type = self.carrier_modulation_combo.get_active_text()
         framing_type = self.framing_combo.get_active_text()
         error_detection_type = self.error_detection_combo.get_active_text()
 
-        if not texto:
-            self.output_label.set_text("Por favor, insira um texto para transmitir.")
+        self.transmitter.modulation_type = modulation_type
+        self.transmitter.carrier_modulation_type = carrier_modulation_type
+
+        mensagem_codificada = self.transmitter.encode_text(texto)
+        tamanho = len(texto)
+        hamming = ''.join([str(bit) for bit in hamming_encode(mensagem_codificada)])
+
+        if error_detection_type == "Bit de paridade par":
+            dado_deteccao = bit_paridade(hamming)
         else:
-            # Configurar modulação e processar o texto
-            self.transmitter.modulation_type = modulation_type
-            self.transmitter.carrier_modulation_type = carrier_modulation_type
+            dado_deteccao = crc(hamming)
 
-            # Codificação inicial
-            mensagem_codificada = self.transmitter.encode_text(texto)
+        if framing_type == "Contagem de caracteres":
+            bits = contagem_caracteres(dado_deteccao, tamanho)
+        else:
+            bits = insercao_bytes(dado_deteccao)
 
-            # Salvar o tamanho original do texto
-            tamanho = len(texto)
+        bits = [int(b) for b in bits]
+        signal = self.transmitter.modulate(bits)
+        carrier_signal = self.transmitter.carrier_modulate(bits)
 
-            # Aplicação do Hamming
-            hamming = hamming_encode(mensagem_codificada)
-            hamming = ''.join([str(bit) for bit in hamming])
+        output_text = (
+            f"📨 Mensagem: {texto}\n"
+            f"Bits: {mensagem_codificada}\n"
+            f"Hamming: {hamming}\n"
+            f"Erro: {dado_deteccao}\n"
+            f"Enquadrado: {bits[:50]}{'...' if len(bits) > 50 else ''}\n"
+            f"→ Sinal transmitido:"
+        )
+        self.output_label.set_text(output_text)
 
-            # Detecção de erros
-            if error_detection_type == "Bit de paridade par":
-                dado_deteccao = bit_paridade(hamming)
-            elif error_detection_type == "CRC":
-                dado_deteccao = crc(hamming)
+        if self.canvas:
+            self.vbox.remove(self.canvas)
 
-            # Enquadramento
-            bits = None  # Defina a variável bits com um valor padrão
-            if framing_type == "Contagem de caracteres":
-                bits = contagem_caracteres(dado_deteccao, tamanho)
-            elif framing_type == "Inserção de bytes":
-                bits = insercao_bytes(dado_deteccao)
+        self.figure, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
+        self.plot_signal(signal, f"Modulação - {modulation_type}", ax1)
 
-            # Verifique se bits foi atribuído corretamente
-            if not bits:
-                self.output_label.set_text("Erro: Nenhum enquadramento válido selecionado.")
-                return
+        if carrier_modulation_type == "8QAM":
+            self.plot_constellation(carrier_signal, ax2)
+        else:
+            self.plot_ondas(carrier_signal, f"Portadora - {carrier_modulation_type}", ax2)
 
-            bits = [int(bit) for bit in bits]
+        self.canvas = FigureCanvas(self.figure)
+        self.vbox.pack_start(self.canvas, True, True, 0)
+        self.canvas.show()
 
-            signal = self.transmitter.modulate(bits)
-            carrier_signal = self.transmitter.carrier_modulate(bits)
-            print(len(bits))
-            
-            # Atualizar a saída de texto
-            output_text = (
-                f"Mensagem transmitida: {texto}\n"
-                f"Mensagem bits: {mensagem_codificada}\n"
-                f"Mensagem com Hamming: {hamming}\n"
-                f"Mensagem com detecção de erros: {dado_deteccao}\n"
-                f"Mensagem enquadrada: {bits}\n"
-                f"sinal transmitido:"
-            )
-            self.output_label.set_text(output_text)
-
-            # Limpar a entrada de texto
-            self.entry.set_text("")
-
-            # Atualizar os gráficos
-            if self.canvas:
-                self.vbox.remove(self.canvas)  # Remover gráfico anterior, se houver
-
-            # Criar a figura com 2 subgráficos (lado a lado)
-            self.figure, (self.ax1, self.ax2) = ax.subplots(1, 2, figsize=(16, 8))  # Ajuste o tamanho conforme necessário
-
-            # Plotando o gráfico da modulação digital (NRZ, Bipolar, Manchester)
-            self.plot_signal(signal, f"Modulação Digital - {modulation_type}", self.ax1)
-
-            # Plotando o gráfico de modulação por portadora
-            if carrier_modulation_type == "8QAM":
-                self.plot_constellation(carrier_signal, self.ax2)
-            elif carrier_modulation_type in ["FSK", "ASK"]:
-                self.plot_ondas(carrier_signal, f"Modulação por Portadora - {carrier_modulation_type}", self.ax2)
-
-            # Atualizar o canvas
-            self.canvas = FigureCanvas(self.figure)
-            self.vbox.pack_start(self.canvas, True, True, 0)
-            self.canvas.show()
-
-    # Gera gráfico FSK E ASK
-    def plot_ondas(self, signal: list, title: str, ax):
+    def plot_ondas(self, signal, title, ax):
         tempo, sinal = signal
-        tempo = np.array(tempo)
-        sinal = np.array(sinal)
-        ax.plot(tempo, sinal, label=title)
+        ax.plot(np.array(tempo), np.array(sinal), label=title)
         ax.set_title(title)
         ax.set_xlabel("Tempo")
         ax.set_ylabel("Amplitude")
         ax.grid()
         ax.legend()
-        self.transmitter.send(signal, self.carrier_modulation_combo.get_active_text(), self.framing_combo.get_active_text(), self.error_detection_combo.get_active_text(), self.username)
+        self.transmitter.send(signal, self.carrier_modulation_combo.get_active_text(),
+                              self.framing_combo.get_active_text(),
+                              self.error_detection_combo.get_active_text(), self.username)
 
-    # Gera gráficos NRZ, Bipolar e Manchester
-    def plot_signal(self, signal: list, title: str, ax):
-        tempo = np.arange(len(signal))
-        ax.step(tempo, signal, where='post', label=title)
+    def plot_signal(self, signal, title, ax):
+        ax.step(np.arange(len(signal)), signal, where='post', label=title)
         ax.set_title(title)
         ax.set_xlabel("Tempo")
-        ax.set_ylabel("Sinal")
-        ax.axhline(0, color='black', linewidth=0.8, linestyle='--')
-        ax.grid(True)
-        ax.legend()
-        #self.transmitter.send(signal, self.modulation_combo.get_active_text(), self.framing_combo.get_active_text(), self.error_detection_combo.get_active_text(), self.username)
-
-    # Gera gráfico 8QAM
-    def plot_constellation(self, signal:list, ax):
-        print(signal)
-        t = signal[0]
-        modulated_signal = signal[1]
-         
-         # Plotar o sinal modulado
-        ax.plot(t, modulated_signal, label='Sinal Modulado (8QAM)')
-        ax.set_title('Modulação 8QAM', fontsize=14)
-        ax.set_xlabel('Tempo', fontsize=12)
-        ax.set_ylabel('Amplitude', fontsize=12)
-        ax.grid(color='gray', linestyle='--', linewidth=0.5)
+        ax.set_ylabel("Amplitude")
+        ax.axhline(0, color='black', linestyle='--', linewidth=0.8)
         ax.grid()
         ax.legend()
-        self.transmitter.send([signal[0].tolist(), signal[1].tolist()], self.carrier_modulation_combo.get_active_text(), self.framing_combo.get_active_text(), self.error_detection_combo.get_active_text(), self.username)
+
+    def plot_constellation(self, signal, ax):
+        t, mod_signal = signal
+        ax.plot(t, mod_signal, label='8QAM')
+        ax.set_title("8QAM")
+        ax.set_xlabel("Tempo")
+        ax.set_ylabel("Amplitude")
+        ax.grid()
+        ax.legend()
+        self.transmitter.send([t.tolist(), mod_signal.tolist()],
+                              self.carrier_modulation_combo.get_active_text(),
+                              self.framing_combo.get_active_text(),
+                              self.error_detection_combo.get_active_text(), self.username)
 
 if __name__ == "__main__":
     app = ClientUI()
