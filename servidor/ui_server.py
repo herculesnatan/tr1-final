@@ -1,7 +1,7 @@
 import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, Pango
-from servidor.receiver import Receiver  # Sua classe existente
+from servidor.receiver import Receiver
 
 class ServerUI(Gtk.Window):
     def __init__(self):
@@ -52,8 +52,10 @@ class ServerUI(Gtk.Window):
 
     def on_start_server(self, button):
         self.receiver.start()
+        self.start_button.set_label("✅ Servidor em execução")
         self.start_button.set_sensitive(False)
-        self.add_text("✅ Servidor iniciado...\n")
+        self.add_text("✅ Servidor iniciado!\n")
+        self.add_text("- Aguardando conexão...\n")
 
     def update_ui(self, data):
         self.add_text(f"{data}\n")

@@ -58,7 +58,7 @@ class Receiver:
                             signal = qam_demodulation(signal[0], signal[1])
                         self.update_ui_callback(f"Usuário: {received_json.get('nome')} \n")
                         # self.update_ui_callback(f"sinal: {received_json.get('signal')} \n")
-                        self.update_ui_callback(f"Sinal demodulado: {signal} \n")
+                        self.update_ui_callback(f"Sinal demodulado: {" ".join(str(bit) for bit in signal)} \n")
 
                         #Analisa o tipo de enquadramento utilizada:
                         if received_json['enquadramento'] == 'Contagem de caracteres':

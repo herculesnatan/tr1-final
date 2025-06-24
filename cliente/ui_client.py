@@ -70,7 +70,8 @@ class ClientUI(Gtk.Window):
         # Fonte monoespaçada para bits e dados
         monospace = Pango.FontDescription("Monospace 11")
         self.output_label.modify_font(monospace)
-        self.output_label.modify_fg(Gtk.StateType.NORMAL, Gdk.color_parse("#333"))
+        #self.output_label.modify_fg(Gtk.StateType.NORMAL, Gdk.color_parse("#333"))
+        self.output_label.modify_fg(Gtk.StateType.NORMAL, Gdk.color_parse("#f9f9f9"))
 
         self.scrolled_window.add(self.output_label)
         self.vbox.pack_start(self.scrolled_window, False, False, 0)
@@ -139,10 +140,10 @@ class ClientUI(Gtk.Window):
 
         output_text = (
             f"📨 Mensagem: {texto}\n"
-            f"Bits: {mensagem_codificada}\n"
-            f"Hamming: {hamming}\n"
-            f"Erro: {dado_deteccao}\n"
-            f"Enquadrado: {bits[:50]}{'...' if len(bits) > 50 else ''}\n"
+            f"Bits       : {" ".join(str(num) for num in mensagem_codificada)}\n"
+            f"Hamming    : {" ".join(hamming)}\n"
+            f"Erro       : {" ".join(dado_deteccao)}\n"
+            f"Enquadrado : {" ".join(str(num) for num in bits[:50])}{'...' if len(bits) > 50 else ''}\n"
             f"→ Sinal transmitido:"
         )
         self.output_label.set_text(output_text)
@@ -182,6 +183,18 @@ class ClientUI(Gtk.Window):
         ax.axhline(0, color='black', linestyle='--', linewidth=0.8)
         ax.grid()
         ax.legend()
+
+    def mostrar_aviso(self,aviso):
+        dialog = Gtk.MessageDialog(
+        parent=self,                          # Janela pai
+        #flags=Gtk.DialogFlags.MODAL,          # Modal (bloqueia a janela principal)
+        type=Gtk.MessageType.WARNING,         # Tipo (WARNING, ERROR, INFO, etc.)
+        buttons=Gtk.ButtonsType.OK,           # Botões (OK, YES_NO, etc.)
+        message_format=aviso               # Mensagem principal
+        )
+        dialog.set_title("Aviso")                 # Título da janela
+        dialog.run()                              # Mostra e espera resposta
+        dialog.destroy()                          # Fecha o diálogo
 
     def plot_constellation(self, signal, ax):
         t, mod_signal = signal

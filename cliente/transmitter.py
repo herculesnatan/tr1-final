@@ -39,14 +39,12 @@ class Transmitter:
     def send(self, signal, modulacao, enquadramento, deteccao, nome):
         HOST = '127.0.0.1'
         PORT = 5000
-        print("sinal trammisttre: {} ", signal)
+        #print("sinal trammisttre: {} ", signal)
 
         try:
             tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             dest = (HOST, PORT)
             tcp.connect(dest)
-
-         
 
             if modulacao in ["NRZ", "Bipolar", "Manchester"]:
                 data_to_send = signal.tolist()  # Conversão para lista se necessário
@@ -69,6 +67,7 @@ class Transmitter:
             tcp.sendall(serialized_data)  # Enviar os dados
 
             print("Dados enviados com sucesso.")
+    
 
         except Exception as e:
             print(f"Erro ao enviar dados: {e}")

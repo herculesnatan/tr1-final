@@ -7,8 +7,8 @@ def contagem_caracteres(dado, tamanho):
     # Transformar cada caractere (dígito) para binário ASCII
     tamanho_binario_ascii = ''.join(format(ord(char), '08b') for char in tamanho_str)
     dado_ruido = flip_random_bit(dado)
-    print(f" dado original: {dado}")
-    print(f" dado após o ruido: {dado_ruido}")
+    print(f"Dado original    : {dado}")
+    print(f"Dado após o ruido: {dado_ruido}")
 
     return f"{tamanho_binario_ascii}{dado_ruido}"
 
@@ -32,8 +32,8 @@ def insercao_bytes(dado, flag="01111110", escape="111111"):
 
     dado_ruido = flip_random_bit(dados_enquadrados)
 
-    print(f" dado original: {dados_enquadrados}")
-    print(f" dado após o ruido: {dado_ruido}")
+    print(f"Dado original    : {dados_enquadrados}")
+    print(f"Dado após o ruido: {dado_ruido}")
     # Retornar os dados com a flag no início e no final
     return f"{flag}{dado_ruido}{flag}"
 
