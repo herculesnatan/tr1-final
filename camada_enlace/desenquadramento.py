@@ -17,9 +17,6 @@ def remover_contagem_caracteres(signal):
     
     return dado
 
-
-
-
 def tira_insercao_bytes(dado, flag="01111110", escape="11111111"):
     """Desenquadramento de dados por inserção de bytes."""
     # Remove as flags de início e fim

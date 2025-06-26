@@ -14,7 +14,6 @@ def contagem_caracteres(dado, tamanho):
 
 def insercao_bytes(dado, flag="01111110", escape="111111"):
 
-    
     # Inicializar dados enquadrados
     dados_enquadrados = ""
     

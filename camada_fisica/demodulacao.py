@@ -67,7 +67,7 @@ def qam_demodulation(t, modulated_signal):
     # Definir parâmetros do sinal
     fs = 1000  # Frequência de amostragem (Hz)
     f_carrier = 10  # Frequência da portadora (Hz)
-    symbols = {
+    constellation = {
         '000': (-1, -1.5),
         '001': (-1, 1.5),
         '010': (1, -1.5),
@@ -83,16 +83,16 @@ def qam_demodulation(t, modulated_signal):
     modulated_signal = np.array(modulated_signal)
     
     # Calcular o número de símbolos
-    symbol_duration = 0.1  # Duração de cada símbolo (s)
-    num_symbols = int(len(t) / (fs * symbol_duration))
+    constellation_duration = 0.1  # Duração de cada constelação (s)
+    num_constellation = int(len(t) / (fs * constellation_duration))
     
     # Inicializar as listas para as coordenadas I e Q recuperadas
     I_values = []
     Q_values = []
     
-    for i in range(num_symbols):
-        start = int(i * symbol_duration * fs)
-        end = int((i + 1) * symbol_duration * fs)
+    for i in range(num_constellation):
+        start = int(i * constellation_duration * fs)
+        end = int((i + 1) * constellation_duration * fs)
         
         # Recuperar os componentes I e Q multiplicando pelo sinal das portadoras
         I = np.sum(modulated_signal[start:end] * np.cos(2 * np.pi * f_carrier * t[start:end]))
@@ -105,16 +105,16 @@ def qam_demodulation(t, modulated_signal):
     decoded_bits = []
     for I, Q in zip(I_values, Q_values):
         min_distance = float('inf')
-        closest_symbol = None
-        for symbol, (I_ref, Q_ref) in symbols.items():
+        closest_constellation = None
+        for symbol, (I_ref, Q_ref) in constellation.items():
             # Calcular a distância Euclidiana entre o ponto I, Q e o ponto do símbolo
             distance = (I - I_ref) ** 2 + (Q - Q_ref) ** 2
             if distance < min_distance:
                 min_distance = distance
-                closest_symbol = symbol
+                closest_constellation = symbol
         
         # Adicionar os bits do símbolo decodificado
-        decoded_bits.append(closest_symbol)
+        decoded_bits.append(closest_constellation)
     
     # Concatenar os bits
     decoded_bit_string = ''.join(decoded_bits)

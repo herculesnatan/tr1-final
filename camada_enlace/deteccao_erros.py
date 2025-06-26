@@ -35,7 +35,6 @@ def crc(mensagem_bits: str):
     # Retorna a mensagem original + CRC calculado
     return mensagem_bits + crc_bin
 
-
 def bit_paridade_receptor(dado):
     """Verifica se o bit de paridade par no final do dado está correto."""
     # Divide os dados entre o conteúdo e o bit de paridade
@@ -52,8 +51,6 @@ def bit_paridade_receptor(dado):
         resultado = "Há erro: o bit de paridade não é válido."
     
     return dado_sem_paridade, resultado
-
-
 
 def crc_receptor(mensagem_com_crc: str):
     CRC32_POLYNOMIAL = 0x04C11DB7

@@ -17,7 +17,6 @@ def manchester_modulation(data: list[int]):
 
     return np.array(sinal)
 
-
 def bipolar_modulation(data: int):
     """Modulação Bipolar (AMI): 0 -> 0, 1 -> alterna entre +1 e -1"""
     estado = 1  # Indica se o próximo "1" será positivo ou negativo
@@ -63,9 +62,6 @@ def fsk_modulation(data: int):
 
     return [time, sinal]
 
-
-
-
 def modulation_8qam(bit_string):
 
     bit_string = ''.join(map(str,bit_string))
@@ -73,7 +69,7 @@ def modulation_8qam(bit_string):
     # Definir parâmetros do sinal
     fs = 1000  # Frequência de amostragem (Hz)
     f_carrier = 10  # Frequência da portadora (Hz)
-    symbols = {
+    constellation = {
         '000': (-1, -1.5),
         '001': (-1, 1.5),
         '010': (1, -1.5),
@@ -91,18 +87,18 @@ def modulation_8qam(bit_string):
     # Dividir a string de bits em símbolos de 3 bits
     data = [bit_string[i:i+3] for i in range(0, len(bit_string), 3)]
 
-    symbol_duration = 0.1  # Duração de cada símbolo (s)
-    t = np.arange(0, len(data) * symbol_duration, 1 / fs)  # Tempo total do sinal
+    constellation_duration = 0.1  # Duração de cada símbolo (s)
+    t = np.arange(0, len(data) * constellation_duration, 1 / fs)  # Tempo total do sinal
 
     # Criar o sinal modulador
     modulated_signal = np.zeros_like(t)
 
     for i, symbol in enumerate(data):
-        if symbol not in symbols:
+        if symbol not in constellation:
             raise ValueError(f"Símbolo inválido encontrado: {symbol}")
-        I, Q = symbols[symbol]  # Coordenadas I e Q do símbolo
-        start = int(i * symbol_duration * fs)  # Início do símbolo
-        end = int((i + 1) * symbol_duration * fs)  # Fim do símbolo
+        I, Q = constellation[symbol]  # Coordenadas I e Q do símbolo
+        start = int(i * constellation_duration * fs)  # Início do símbolo
+        end = int((i + 1) * constellation_duration * fs)  # Fim do símbolo
         
         # Criar a portadora modulada
         carrier = np.cos(2 * np.pi * f_carrier * t[start:end]) * I + np.sin(2 * np.pi * f_carrier * t[start:end]) * Q
