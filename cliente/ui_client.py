@@ -139,13 +139,15 @@ class ClientUI(Gtk.Window):
         carrier_signal = self.transmitter.carrier_modulate(bits)
 
         output_text = (
+
             f"📨 Mensagem: {texto}\n"
-            f"Bits       : {" ".join(str(num) for num in mensagem_codificada)}\n"
-            f"Hamming    : {" ".join(hamming)}\n"
-            f"Erro       : {" ".join(dado_deteccao)}\n"
-            f"Enquadrado : {" ".join(str(num) for num in bits[:50])}{'...' if len(bits) > 50 else ''}\n"
-            f"→ Sinal transmitido:"
+            f"Bits       : {' '.join(str(num) for num in mensagem_codificada)}\n"
+            f"Hamming    : {' '.join(hamming)}\n"
+            f"Erro       : {' '.join(dado_deteccao)}\n"
+            f"Enquadrado : {' '.join(str(num) for num in bits[:50])}{'...' if len(bits) > 50 else ''}\n"
+            f"→ Sinal transmitido: "
         )
+
         self.output_label.set_text(output_text)
 
         if self.canvas:
@@ -187,7 +189,6 @@ class ClientUI(Gtk.Window):
     def mostrar_aviso(self,aviso):
         dialog = Gtk.MessageDialog(
         parent=self,                          # Janela pai
-        #flags=Gtk.DialogFlags.MODAL,          # Modal (bloqueia a janela principal)
         type=Gtk.MessageType.WARNING,         # Tipo (WARNING, ERROR, INFO, etc.)
         buttons=Gtk.ButtonsType.OK,           # Botões (OK, YES_NO, etc.)
         message_format=aviso               # Mensagem principal
