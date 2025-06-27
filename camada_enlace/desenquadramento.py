@@ -18,35 +18,55 @@ def remover_contagem_caracteres(signal):
     return dado
 
 def tira_insercao_bytes(dado, flag="01111110", escape="11111111"):
-    """Desenquadramento de dados por inserção de bytes."""
-    # Remove as flags de início e fim
-    if dado.startswith(flag) and dado.endswith(flag):
-        dado = dado[len(flag):-len(flag)]
-    else:
-        raise ValueError("Dados não estão devidamente enquadrados")
-
-    # Decodificar os dados removendo os escapes
+    """Realiza o desenquadramento de dados utilizando a técnica de inserção de bytes.
+    
+    Parâmetros:
+        dado (str): Sequência binária enquadrada contendo os dados
+        flag (str): Sequência binária que delimita o quadro (padrão: '01111110')
+        escape (str): Sequência binária de escape (padrão: '11111111')
+    
+    Retorno:
+        str: Dados desenquadrados em formato binário
+    
+    Exceções:
+        ValueError: Quando os dados não estão corretamente enquadrados ou contêm sequências inválidas
+    """
+    # Verificação inicial do enquadramento
+    if not (dado.startswith(flag) and dado.endswith(flag)):
+        raise ValueError("Erro de enquadramento: flags inicial/final ausentes")
+    
+    # Remove flags e pré-calcula comprimentos
+    dado_limpo = dado[len(flag):-len(flag)]
+    len_flag = len(flag)
+    len_escape = len(escape)
+    
+    # Processamento dos dados
+    dados_processados = []
     i = 0
-    dados_binarios = []
-    while i < len(dado):
-        # Se encontrar um escape, verifica o próximo conjunto de bits
-        if dado[i:i+len(escape)] == escape:
-            # Verifica o próximo conjunto de bits após o escape
-            prox = dado[i+len(escape):i+len(escape)+len(flag)]
-            if prox == flag:  # escape seguido por flag
-                dados_binarios.append(flag)
-                i += len(escape) + len(flag)
-            elif prox == escape:  # escape seguido por outro escape
-                dados_binarios.append(escape)
-                i += len(escape) + len(escape)
+    tamanho_dado = len(dado_limpo)
+    
+    while i < tamanho_dado:
+        # Verifica sequência de escape
+        if dado_limpo.startswith(escape, i):
+            # Calcula posição do próximo byte após o escape
+            prox_pos = i + len_escape
+            
+            # Verifica se há bytes suficientes após o escape
+            if prox_pos + len_flag > tamanho_dado:
+                raise ValueError(f"Sequência incompleta após escape na posição {i}")
+            
+            # Trata os casos especiais
+            if dado_limpo.startswith(flag, prox_pos):
+                dados_processados.append(flag)
+                i += len_escape + len_flag
+            elif dado_limpo.startswith(escape, prox_pos):
+                dados_processados.append(escape)
+                i += len_escape + len_escape
             else:
-                raise ValueError("Sequência de escape inválida")
+                raise ValueError(f"Sequência inválida após escape na posição {i}")
         else:
-            # Se não for escape, adiciona diretamente aos dados
-            dados_binarios.append(dado[i])
+            # Adiciona byte normal ao resultado
+            dados_processados.append(dado_limpo[i])
             i += 1
-
-    # Junta os bits processados e converte para string ASCII
-    dados_binarios = ''.join(dados_binarios)
-    print(f"tira_insercao_bytes: {dados_binarios}")
-    return dados_binarios
+    
+    return ''.join(dados_processados)
