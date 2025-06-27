@@ -70,8 +70,6 @@ class ClientUI(Gtk.Window):
         # Fonte monoespaçada para bits e dados
         monospace = Pango.FontDescription("Monospace 11")
         self.output_label.modify_font(monospace)
-        #self.output_label.modify_fg(Gtk.StateType.NORMAL, Gdk.color_parse("#333"))
-        self.output_label.modify_fg(Gtk.StateType.NORMAL, Gdk.color_parse("#f9f9f9"))
 
         self.scrolled_window.add(self.output_label)
         self.vbox.pack_start(self.scrolled_window, False, False, 0)
