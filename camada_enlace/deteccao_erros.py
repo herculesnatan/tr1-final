@@ -1,7 +1,18 @@
 def bit_paridade(dado):
-    """Adiciona bit de paridade par ao final do dado."""
-    paridade = sum(int(bit) for bit in dado) % 2
-    return f"{dado}{paridade}"
+    """Adiciona um bit de paridade par ao final da string binária.
+    
+    Args:
+        dado: String contendo apenas caracteres '0' ou '1'
+    
+    Returns:
+        String original com um bit de paridade anexado
+    
+    Raises:
+        ValueError: Se a string contiver caracteres inválidos
+    """
+    bits_ativos = sum(int(bit) for bit in dado)
+    bit_paridade = bits_ativos % 2
+    return dado + str(bit_paridade)
 
 def crc(mensagem_bits: str):
 
@@ -52,40 +63,53 @@ def bit_paridade_receptor(dado):
     
     return dado_sem_paridade, resultado
 
-def crc_receptor(mensagem_com_crc: str):
+def crc_receptor(mensagem_com_crc: str) -> str:
+    """Verifica a integridade de uma mensagem com CRC-32.
+    
+    Args:
+        mensagem_com_crc: String binária contendo a mensagem + CRC de 32 bits
+        
+    Returns:
+        A mensagem original (sem o CRC) se a verificação for bem-sucedida
+        
+    Raises:
+        ValueError: Se a mensagem for menor que 32 bits ou contiver caracteres inválidos
+    """
+    # Constantes CRC-32 (padrão Ethernet, ZIP, etc.)
     CRC32_POLYNOMIAL = 0x04C11DB7
-    CRC32_XOR_OUT = 0xFFFFFFFF  # XOR final
-    # Separar a mensagem original e o CRC recebido
-    mensagem_bits = mensagem_com_crc[:-32]  # Mensagem original
-    crc_recebido = mensagem_com_crc[-32:]   # Últimos 32 bits são o CRC
+    CRC32_XOR_OUT = 0xFFFFFFFF
 
-    # Converte para inteiro
-    mensagem = int(mensagem_bits, 2)
-    crc_recebido_int = int(crc_recebido, 2)
-
-    # Adiciona 32 zeros para realizar a divisão
-    mensagem <<= 32
-
-    # Obtém o tamanho da mensagem original (sem CRC)
-    tamanho = len(mensagem_bits)
-
-    # Aplica a divisão binária módulo 2
-    for i in range(tamanho):
-        if mensagem & (1 << (tamanho + 31 - i)):  # Se o bit mais à esquerda for 1
-            mensagem ^= CRC32_POLYNOMIAL << (tamanho - 1 - i)  # XOR com polinômio deslocado
-
-    # O CRC calculado são os últimos 32 bits
-    crc_calculado = mensagem & 0xFFFFFFFF
-
-    # Aplica XOR final (padrão CRC-32)
+    
+    # Separa mensagem e CRC
+    mensagem_bits = mensagem_com_crc[:-32]
+    crc_recebido = mensagem_com_crc[-32:]
+    
+    # Converte para inteiros
+    try:
+        mensagem_int = int(mensagem_bits, 2)
+        crc_recebido_int = int(crc_recebido, 2)
+    except ValueError:
+        raise ValueError("Formato binário inválido na mensagem ou CRC")
+    
+    # Prepara mensagem para cálculo (adiciona 32 zeros)
+    mensagem_int <<= 32
+    
+    # Cálculo do CRC
+    for i in range(len(mensagem_bits)):
+        if mensagem_int & (1 << (len(mensagem_bits) + 31 - i)):
+            shift_amount = len(mensagem_bits) - 1 - i
+            mensagem_int ^= CRC32_POLYNOMIAL << shift_amount
+    
+    # Extrai e ajusta o CRC calculado
+    crc_calculado = mensagem_int & 0xFFFFFFFF
     crc_calculado ^= CRC32_XOR_OUT
-
-    # Verifica se o CRC recebido é igual ao CRC calculado
-    crc_valido = (crc_calculado == crc_recebido_int)
-
+    
+    # Verificação do CRC
+    crc_valido = crc_calculado == crc_recebido_int
+    
     if crc_valido:
         print("CRC válido: mensagem recebida corretamente.")
     else:
         print("Erro: CRC inválido, dados corrompidos.")
-
+    
     return mensagem_bits
