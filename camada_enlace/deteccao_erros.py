@@ -1,7 +1,8 @@
 def bit_paridade(dado):
     """Adiciona bit de paridade par ao final do dado."""
-    paridade = sum(int(bit) for bit in dado) % 2
-    return f"{dado}{paridade}"
+    bits_ativos = sum(int(bit) for bit in dado)
+    bit_paridade = bits_ativos % 2
+    return dado + str(bit_paridade)
 
 def crc(mensagem_bits: str):
 
