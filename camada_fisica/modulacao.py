@@ -1,7 +1,13 @@
 import numpy as np
 
 def nrz_modulation(data: int):
-    """Modulação NRZ: 0 -> -1, 1 -> +1"""
+    """
+    Transforma um fluxo de dados binários em um sinal de dois níveis de tensão distindos e 
+    opostos.
+    Se o bit for igual a 0, adiciona -1 na lista
+    Se o bit for igual a 1, adicona 1 na lista
+    Modulação NRZ: 0 -> -1, 1 -> +1
+    """
     return np.array([-1 if bit == 0 else 1 for bit in data])
 
 def manchester_modulation(data: list[int]):
@@ -12,8 +18,6 @@ def manchester_modulation(data: list[int]):
             sinal.extend([1,0])  # Representação Manchester para bit 1
         else:
             sinal.extend([0, 1])  # Representação Manchester para bit 0
-    print(f"dado original: {data}")
-    print(f"manchester aplicado: {sinal}")
 
     return np.array(sinal)
 
