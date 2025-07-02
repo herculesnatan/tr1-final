@@ -9,13 +9,13 @@ def ask_demodulation(time: list, sinal: list, bit_duration: float = 1.0, thresho
     # Divida o sinal em segmentos correspondentes a cada bit
     for i in range(0, len(sinal), samples_per_bit):
         segment = sinal[i:i + samples_per_bit]
-        if len(segment) < samples_per_bit:  # Ignore segmentos incompletos
+        if len(segment) < samples_per_bit:  # Ignora segmentos incompletos
             break
         
-        # Calcule a energia média (amplitude média) do segmento
+        # Calcula a energia média do segmento
         avg_amplitude = np.mean(np.abs(segment))
         
-        # Compare a amplitude média com o limite (threshold)
+        # Compara a amplitude média com o limite
         if avg_amplitude > threshold:
             bits.append(1)
         else:
@@ -30,10 +30,6 @@ def fsk_demodulation(time: np.ndarray, signal: np.ndarray):
     f2 = 1  # Frequência associada ao bit 0
     num_amostras_por_bit = 100  # Número de amostras por bit
     bits = []  # Lista para armazenar os bits demodulados
-
-    # Verificar se o tempo é uniformemente espaçado
-    if not np.allclose(np.diff(time), time[1] - time[0]):
-        raise ValueError("O vetor de tempo não é uniformemente espaçado!")
 
     # Demodular o sinal
     for i in range(0, len(signal), num_amostras_por_bit):
@@ -78,7 +74,7 @@ def qam_demodulation(t, modulated_signal):
         '111': (0, 2)
     }
     
-    # Garantir que os sinais são arrays NumPy
+    # Garantir que os sinais são arrays
     t = np.array(t)
     modulated_signal = np.array(modulated_signal)
     
