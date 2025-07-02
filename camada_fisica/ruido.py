@@ -1,6 +1,7 @@
 import random as r
 
-taxa_de_erro = 0.0001
+err_tax = 0.001
+
 def flip_random_bit(binary_list):
     # Faz uma cópia da lista original
     binary_list_copy = list(binary_list)
@@ -12,4 +13,3 @@ def flip_random_bit(binary_list):
     
     # Retorna a cópia alterada
     return ''.join(binary_list_copy)
-
