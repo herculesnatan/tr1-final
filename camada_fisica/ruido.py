@@ -2,6 +2,10 @@ import random as r
 
 err_tax = 0.001
 
+<<<<<<< HEAD
+=======
+taxa_de_erro = 0.3
+>>>>>>> 5e5cc98 (mudança de erro no ruido)
 def flip_random_bit(binary_list):
     # Faz uma cópia da lista original
     binary_list_copy = list(binary_list)
