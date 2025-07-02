@@ -1,6 +1,6 @@
 import random as rand
 
-taxa_de_erro = 0.0001
+taxa_de_erro = 0.3
 def flip_random_bit(binary_list):
     # Faz uma cópia da lista original
     binary_list_copy = list(binary_list)
