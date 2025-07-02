@@ -13,6 +13,7 @@ def ask_demodulation(time: list, sinal: list, bit_duration: float = 1.0, thresho
 
     for i in range(0, len(sinal), samples_per_bit):
         segment = sinal[i:i + samples_per_bit]
+
         if len(segment) < samples_per_bit:
             break
 
