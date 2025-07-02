@@ -142,7 +142,7 @@ class ClientUI(Gtk.Window):
             f"Bits       : {' '.join(str(num) for num in mensagem_codificada)}\n"
             f"Hamming    : {' '.join(hamming)}\n"
             f"Erro       : {' '.join(dado_deteccao)}\n"
-            f"Enquadrado : {' '.join(str(num) for num in bits[:50])}{'...' if len(bits) > 50 else ''}\n"
+            f"Enquadrado : {' '.join(str(num) for num in bits[:50])}{'...' if len(bits) > 30 else ''}\n"
             f"→ Sinal transmitido: "
         )
 
