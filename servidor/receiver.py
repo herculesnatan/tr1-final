@@ -42,8 +42,6 @@ class Receiver:
                         received_json = json.loads(received_data.decode('utf-8'))
                         print(f"Dados recebidos: {received_json}")
 
-
-                        
                         #pega o sinal do Objeto:
                         signal = received_json.get('signal')
 
@@ -74,6 +72,8 @@ class Receiver:
                         if received_json['deteccao'] == 'Bit de paridade par':
                             erro_detectado, resultado = bit_paridade_receptor(desenquadramento)
                             self.update_ui_callback(f"{resultado} \n")
+                        
+                        # olhar essa parte com mais calma
                         elif received_json['deteccao'] == 'CRC':
                             erro_detectado, resultado, resto = crc_receptor(desenquadramento)
                             self.update_ui_callback(f"{resultado}, resultado do CRC: {resto} \n")
@@ -85,7 +85,6 @@ class Receiver:
                         dado_corrigido = hamming_encode_receptor(erro_detectado)
                         self.update_ui_callback(f"Mensagem sem os bits de correção: {dado_corrigido} \n")
 
-                        #try:
                         mensagem = binario_para_texto(dado_corrigido)
                         self.update_ui_callback(f"Mensagem recebida: {mensagem} \n")
                         
