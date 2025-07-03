@@ -1,5 +1,6 @@
 import random as rand
 
+ #todo - Arrumar - melhorar taxa de erro que sempre tem aparecer
 taxa_de_erro = 0.0001
 def flip_random_bit(binary_list):
     # Faz uma cópia da lista original
