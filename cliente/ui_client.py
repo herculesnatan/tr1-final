@@ -109,7 +109,7 @@ class ClientUI(Gtk.Window):
         if not texto:
             self.output_label.set_text("⚠️ Por favor, insira um texto para transmitir.")
             return
-
+        # onde chama as funções de modulação
         modulation_type = self.modulation_combo.get_active_text()
         carrier_modulation_type = self.carrier_modulation_combo.get_active_text()
         framing_type = self.framing_combo.get_active_text()
