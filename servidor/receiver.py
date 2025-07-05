@@ -21,80 +21,82 @@ class Receiver:
         PORT = 5000
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        try:
-            server.bind((HOST, PORT))
-            server.listen(5)
-            print(f"Servidor ouvindo em {HOST}:{PORT}")
+        #try:
+        server.bind((HOST, PORT))
+        server.listen(5)
+        print(f"Servidor ouvindo em {HOST}:{PORT}")
 
-            while True:
-                conn, addr = server.accept()
-                print(f"Conexão estabelecida com {addr}")
-                try:
-                    data_size = struct.unpack("!I", conn.recv(4))[0]
-                    received_data = b""
-                    while len(received_data) < data_size:
-                        packet = conn.recv(1024)
-                        if not packet:
-                            break
-                        received_data += packet
+        while True:
+            conn, addr = server.accept()
+            print(f"Conexão estabelecida com {addr}")
+            #try:
+            data_size = struct.unpack("!I", conn.recv(4))[0]
+            received_data = b""
+            while len(received_data) < data_size:
+                packet = conn.recv(1024)
+                if not packet:
+                    break
+                received_data += packet
 
-                    if received_data:
-                        received_json = json.loads(received_data.decode('utf-8'))
-                        print(f"Dados recebidos: {received_json}")
+            if received_data:
+                received_json = json.loads(received_data.decode('utf-8'))
+                #print(f"Dados recebidos: {received_json}")
 
-                        #pega o sinal do Objeto:
-                        signal = received_json.get('signal')
+                #pega o sinal do Objeto:
+                signal = received_json.get('signal')
 
-                        #Analisa qual tipo de portadora foi utilizada:
-                        if received_json["modulacao"] == "ASK":
-                            signal = ask_demodulation(signal[0],signal[1])
-                        elif received_json["modulacao"] == "FSK":
-                            time = signal[0]
-                            sinal_lista = signal[1]
-                            signal = fsk_demodulation(time, sinal_lista)
-                        elif received_json["modulacao"] == "8QAM":
-                            signal = qam_demodulation(signal[0], signal[1])
-                        self.update_ui_callback(f"Usuário: {received_json.get('nome')} \n")
-                        #self.update_ui_callback(f"sinal: {received_json.get('signal')} \n")
-                        self.update_ui_callback(f'Sinal demodulado: {" ".join(str(bit) for bit in signal)} \n')
+                #Analisa qual tipo de portadora foi utilizada:
+                if received_json["modulacao"] == "ASK":
+                    signal = ask_demodulation(signal[0],signal[1])
+                elif received_json["modulacao"] == "FSK":
+                    time = signal[0]
+                    sinal_lista = signal[1]
+                    signal = fsk_demodulation(time, sinal_lista)
+                elif received_json["modulacao"] == "8QAM":
+                    signal = qam_demodulation(signal[0], signal[1])
+                self.update_ui_callback(f"\n     ====== NOVA MENSAGEM RECEBIDA ======")
+                self.update_ui_callback(f"Usuário: {received_json.get('nome')} \n")
+                #self.update_ui_callback(f"sinal: {received_json.get('signal')} \n")
+                self.update_ui_callback(f'Sinal demodulado: {" ".join(str(bit) for bit in signal)} \n')
 
-                        #Analisa o tipo de enquadramento utilizada:
-                        if received_json['enquadramento'] == 'Contagem de caracteres':
-                            desenquadramento = remover_contagem_caracteres(''.join(map(str, signal)))
-                        elif received_json['enquadramento'] == 'Inserção de bytes':
-                            desenquadramento = tira_insercao_bytes(''.join(map(str, signal)))
-                        else:
-                            raise ValueError("Método de enquadramento desconhecido")
-                        self.update_ui_callback(f"Sinal desenquadrado: {desenquadramento}")
+                #Analisa o tipo de enquadramento utilizada:
+                if received_json['enquadramento'] == 'Contagem de caracteres':
+                    desenquadramento = remover_contagem_caracteres(''.join(map(str, signal)))
+                elif received_json['enquadramento'] == 'Inserção de bytes':
+                    print(f"ta indo pra a função: {''.join(map(str, signal))}")
+                    desenquadramento = tira_insercao_bytes(''.join(map(str, signal)))
+                else:
+                    raise ValueError("Método de enquadramento desconhecido")
+                print(f"desenquadramento: {desenquadramento}")
+                self.update_ui_callback(f"Sinal desenquadrado: {desenquadramento}")
 
 
-                        #Analisa o tipo de detecção de erro utilizada:
-                        if received_json['deteccao'] == 'Bit de paridade par':
-                            erro_detectado, resultado = bit_paridade_receptor(desenquadramento)
-                            self.update_ui_callback(f"{resultado} \n")
-                        
-                        # olhar essa parte com mais calma
-                        elif received_json['deteccao'] == 'CRC':
-                            erro_detectado, resultado, resto = crc_receptor(desenquadramento)
-                            self.update_ui_callback(f"{resultado}, resultado do CRC: {resto} \n")
-                        else:
-                            raise ValueError("Método de detecção desconhecido \n")
-                        
-                        self.update_ui_callback(f"Mensagem sem os bits de detcção: {erro_detectado} \n")
+                #Analisa o tipo de detecção de erro utilizada:
+                if received_json['deteccao'] == 'Bit de paridade par':
+                    erro_detectado, resultado = bit_paridade_receptor(desenquadramento)
+                    self.update_ui_callback(f"{resultado} \n")
+                
+                # olhar essa parte com mais calma
+                elif received_json['deteccao'] == 'CRC':
+                    erro_detectado, resultado, resto = crc_receptor(desenquadramento)
+                    self.update_ui_callback(f"{resultado}, resultado do CRC: {resto} \n")
+                else:
+                    raise ValueError("Método de detecção desconhecido \n")
+                
+                self.update_ui_callback(f"Mensagem sem os bits de detcção: {erro_detectado} \n")
 
-                        dado_corrigido = hamming_encode_receptor(erro_detectado)
-                        self.update_ui_callback(f"Mensagem sem os bits de correção: {dado_corrigido} \n")
+                dado_corrigido = hamming_encode_receptor(erro_detectado)
+                self.update_ui_callback(f"Mensagem sem os bits de correção: {dado_corrigido} \n")
 
-                        mensagem = binario_para_texto(dado_corrigido)
-                        self.update_ui_callback(f"Mensagem recebida: {mensagem} \n")
-                        
-
-                except Exception as e:
-                    print(f"Erro ao processar dados: {e}")
-                finally:
-                    conn.close()
-                    print(f"Conexão com {addr} encerrada.")
-        except Exception as e:
-            print(f"Erro ao iniciar o servidor: {e}")
-        finally:
-            server.close()
+                mensagem = binario_para_texto(dado_corrigido)
+                self.update_ui_callback(f"Mensagem recebida: {mensagem} \n")
+                    
+            #except Exception as e:
+            #    print(f"Erro ao processar dados: {e}")
+            #finally:
+            #    conn.close()
+            #    print(f"Conexão com {addr} encerrada.")
+        #except Exception as e:
+        #    print(f"Erro ao iniciar o servidor: {e}")
+        #finally:
+        #    server.close()

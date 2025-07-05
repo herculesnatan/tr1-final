@@ -85,11 +85,11 @@ def crc_receptor(mensagem_com_crc: str) -> str:
     crc_recebido = mensagem_com_crc[-32:]
     
     # Converte para inteiros
-    try:
-        mensagem_int = int(mensagem_bits, 2)
-        crc_recebido_int = int(crc_recebido, 2)
-    except ValueError:
-        raise ValueError("Formato binário inválido na mensagem ou CRC")
+    #try:
+    mensagem_int = int(mensagem_bits, 2)
+    crc_recebido_int = int(crc_recebido, 2)
+    #except ValueError:
+    #    raise ValueError("Formato binário inválido na mensagem ou CRC")
     
     # Prepara mensagem para cálculo (adiciona 32 zeros)
     mensagem_int <<= 32
@@ -108,8 +108,8 @@ def crc_receptor(mensagem_com_crc: str) -> str:
     crc_valido = crc_calculado == crc_recebido_int
     
     if crc_valido:
-        print("CRC válido: mensagem recebida corretamente.")
+        resultado = "CRC válido: mensagem recebida corretamente."
     else:
-        print("Erro: CRC inválido, dados corrompidos.")
-    
-    return mensagem_bits
+        resultado = "Erro: CRC inválido, dados corrompidos."
+    print(f"mensagem_bits: {mensagem_bits}")
+    return mensagem_bits, resultado, mensagem_bits 
