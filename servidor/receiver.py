@@ -19,81 +19,106 @@ class Receiver:
     def run_server(self):
         HOST = "127.0.0.1"
         PORT = 5000
+
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         try:
             server.bind((HOST, PORT))
             server.listen(5)
             print(f"Servidor ouvindo em {HOST}:{PORT}")
+            teste = 1
 
             while True:
                 conn, addr = server.accept()
                 print(f"Conexão estabelecida com {addr}")
+
                 try:
+                    self.update_ui_callback(f"\n---------------------- TESTE: {teste} -----------------------------\n")
+
+                    # Recebe o tamanho dos dados
                     data_size = struct.unpack("!I", conn.recv(4))[0]
                     received_data = b""
+
+                    self.update_ui_callback(f"Tamanho dos dados a receber: {data_size}\n")
+
                     while len(received_data) < data_size:
                         packet = conn.recv(1024)
                         if not packet:
+                            self.update_ui_callback("Dados recebidos incompletos.\n")
                             break
                         received_data += packet
 
-                    if received_data:
-                        received_json = json.loads(received_data.decode('utf-8'))
-                        print(f"Dados recebidos: {received_json}")
+                    if len(received_data) < data_size:
+                        self.update_ui_callback("Conexão encerrada prematuramente.\n")
+                        continue
 
-                        #pega o sinal do Objeto:
-                        signal = received_json.get('signal')
+                    if not received_data:
+                        continue
 
-                        #Analisa qual tipo de portadora foi utilizada:
-                        if received_json["modulacao"] == "ASK":
-                            signal = ask_demodulation(signal[0],signal[1])
-                        elif received_json["modulacao"] == "FSK":
-                            time = signal[0]
-                            sinal_lista = signal[1]
-                            signal = fsk_demodulation(time, sinal_lista)
-                        elif received_json["modulacao"] == "8QAM":
-                            signal = qam_demodulation(signal[0], signal[1])
-                        self.update_ui_callback(f"Usuário: {received_json.get('nome')} \n")
-                        #self.update_ui_callback(f"sinal: {received_json.get('signal')} \n")
-                        self.update_ui_callback(f'Sinal demodulado: {" ".join(str(bit) for bit in signal)} \n')
+                    received_json = json.loads(received_data.decode('utf-8'))
+                    signal = received_json.get('signal')
 
-                        #Analisa o tipo de enquadramento utilizada:
-                        if received_json['enquadramento'] == 'Contagem de caracteres':
-                            desenquadramento = remover_contagem_caracteres(''.join(map(str, signal)))
-                        elif received_json['enquadramento'] == 'Inserção de bytes':
-                            desenquadramento = tira_insercao_bytes(''.join(map(str, signal)))
-                        else:
-                            raise ValueError("Método de enquadramento desconhecido")
-                        self.update_ui_callback(f"Sinal desenquadrado: {desenquadramento}")
+                    # Demodulação
+                    modulacao = received_json.get("modulacao")
+                    if modulacao == "ASK":
+                        signal = ask_demodulation(signal[0], signal[1])
+                    elif modulacao == "FSK":
+                        signal = fsk_demodulation(signal[0], signal[1])
+                    elif modulacao == "8QAM":
+                        signal = qam_demodulation(signal[0], signal[1])
+                    else:
+                        raise ValueError("Modulação desconhecida")
 
+                    self.update_ui_callback("====== NOVA MENSAGEM RECEBIDA ======\n")
+                    self.update_ui_callback(f"Usuário: {received_json.get('nome')}\n")
+                    self.update_ui_callback(f"Sinal demodulado: {' '.join(str(bit) for bit in signal)}\n")
 
-                        #Analisa o tipo de detecção de erro utilizada:
-                        if received_json['deteccao'] == 'Bit de paridade par':
-                            erro_detectado, resultado = bit_paridade_receptor(desenquadramento)
-                            self.update_ui_callback(f"{resultado} \n")
-                        
-                        # olhar essa parte com mais calma
-                        elif received_json['deteccao'] == 'CRC':
-                            erro_detectado, resultado, resto = crc_receptor(desenquadramento)
-                            self.update_ui_callback(f"{resultado}, resultado do CRC: {resto} \n")
-                        else:
-                            raise ValueError("Método de detecção desconhecido \n")
-                        
-                        self.update_ui_callback(f"Mensagem sem os bits de detcção: {erro_detectado} \n")
+                    # Desenquadramento
+                    enquadramento = received_json.get("enquadramento")
+                    sinal_str = ''.join(map(str, signal))
+                    if enquadramento == "Contagem de caracteres":
+                        desenquadrado = remover_contagem_caracteres(sinal_str)
+                    elif enquadramento == "Inserção de bytes":
+                        desenquadrado = tira_insercao_bytes(sinal_str)
+                    else:
+                        raise ValueError("Método de enquadramento desconhecido")
 
-                        dado_corrigido = hamming_encode_receptor(erro_detectado)
-                        self.update_ui_callback(f"Mensagem sem os bits de correção: {dado_corrigido} \n")
+                    self.update_ui_callback(f"Sinal desenquadrado: {desenquadrado}\n")
 
+                    # Detecção de erros
+                    deteccao = received_json.get("deteccao")
+                    if deteccao == "Bit de paridade par":
+                        erro_detectado, resultado = bit_paridade_receptor(desenquadrado)
+                        self.update_ui_callback(f"{resultado}\n")
+                    elif deteccao == "CRC":
+                        erro_detectado, resultado, resto = crc_receptor(desenquadrado)
+                        self.update_ui_callback(f"{resultado}, resultado do CRC: {resto}\n")
+                    else:
+                        raise ValueError("Método de detecção de erro desconhecido")
+
+                    self.update_ui_callback(f"Mensagem sem os bits de detecção: {erro_detectado}\n")
+
+                    # Correção de erros com Hamming
+                    try:
+                        dado_corrigido, erro = hamming_encode_receptor(erro_detectado)
+                        self.update_ui_callback(f"Mensagem sem os bits de correção: {dado_corrigido}\n")
                         mensagem = binario_para_texto(dado_corrigido)
-                        self.update_ui_callback(f"Mensagem recebida: {mensagem} \n")
-                        
+                        self.update_ui_callback(f"Mensagem recebida: {mensagem}\n")
+                        if erro != "nada":
+                            self.update_ui_callback(f"{erro}\n")
+                    except Exception as e:
+                        self.update_ui_callback(f"Erro ao aplicar Hamming: {e}\n")
+
+                    teste += 1
 
                 except Exception as e:
                     print(f"Erro ao processar dados: {e}")
+                    self.update_ui_callback(f"Erro ao processar dados: {e}\n")
+
                 finally:
                     conn.close()
                     print(f"Conexão com {addr} encerrada.")
+
         except Exception as e:
             print(f"Erro ao iniciar o servidor: {e}")
         finally:
