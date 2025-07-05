@@ -90,6 +90,7 @@ def crc_receptor(mensagem_com_crc: str) -> str:
     crc_recebido_int = int(crc_recebido, 2)
     #except ValueError:
     #    raise ValueError("Formato binário inválido na mensagem ou CRC")
+
     
     # Prepara mensagem para cálculo (adiciona 32 zeros)
     mensagem_int <<= 32

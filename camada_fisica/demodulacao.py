@@ -1,12 +1,17 @@
 import numpy as np
 
 def ask_demodulation(time: list, sinal: list, bit_duration: float = 1.0, threshold: float = 0.5):
-   
+    """
+    Demodulação ASK (Amplitude Shift Keying):
+    Recupera bits com base na amplitude do sinal.
+    - bit 1: se a média da amplitude for maior que o limiar (threshold)
+    - bit 0: caso contrário
+    """
     bits = []
-    sample_rate = len(time) / (time[-1] - time[0])  # Taxa de amostragem
+    sample_rate = len(time) / (time[-1] - time[0])  # Taxa de amostragem (quantas amostras por segundo)
     samples_per_bit = int(sample_rate * bit_duration)  # Número de amostras por bit
 
-    # Divida o sinal em segmentos correspondentes a cada bit
+    # Dividir o sinal em segmentos para cada bit
     for i in range(0, len(sinal), samples_per_bit):
         segment = sinal[i:i + samples_per_bit]
         if len(segment) < samples_per_bit:  # Ignora segmentos incompletos
@@ -26,10 +31,16 @@ def ask_demodulation(time: list, sinal: list, bit_duration: float = 1.0, thresho
 
 
 def fsk_demodulation(time: np.ndarray, signal: np.ndarray):
-    f1 = 2  # Frequência associada ao bit 1
-    f2 = 1  # Frequência associada ao bit 0
-    num_amostras_por_bit = 100  # Número de amostras por bit
-    bits = []  # Lista para armazenar os bits demodulados
+    """
+    Demodulação FSK (Frequency Shift Keying):
+    Verifica a frequência dominante em cada segmento para recuperar os bits.
+    - bit 1: se frequência dominante se aproxima de f1
+    - bit 0: se se aproxima de f2
+    """
+    f1 = 2  # Frequência para bit 1
+    f2 = 1  # Frequência para bit 0
+    num_amostras_por_bit = 100
+    bits = []
 
     # Demodular o sinal
     for i in range(0, len(signal), num_amostras_por_bit):
@@ -59,10 +70,14 @@ def fsk_demodulation(time: np.ndarray, signal: np.ndarray):
 
 
 def qam_demodulation(t, modulated_signal):
-
-    # Definir parâmetros do sinal
+    """
+    Demodulação 8-QAM (Quadrature Amplitude Modulation):
+    Recupera os bits com base na posição I-Q (fase/amplitude) do sinal recebido.
+    Cada símbolo de 3 bits é convertido de volta com base na constelação usada.
+    """
     fs = 1000  # Frequência de amostragem (Hz)
     f_carrier = 10  # Frequência da portadora (Hz)
+    
     constellation = {
         '000': (-1, -1.5),
         '001': (-1, 1.5),
