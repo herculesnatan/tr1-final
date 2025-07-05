@@ -3,6 +3,8 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, Pango
 from servidor.receiver import Receiver
 
+from gi.repository import GLib #sem esse glib o servidor fica caindo
+
 class ServerUI(Gtk.Window):
     def __init__(self):
         super().__init__(title="Receptor")
@@ -58,7 +60,8 @@ class ServerUI(Gtk.Window):
         self.add_text("- Aguardando conexão...\n")
 
     def update_ui(self, data):
-        self.add_text(f"{data}\n")
+        #arrumado update para usar GLib 
+        GLib.idle_add(self.add_text, f"{data} \n") #aleo alterei aqui
 
     def add_text(self, text):
         end_mark = self.text_buffer.create_mark(None, self.text_buffer.get_end_iter(), False)

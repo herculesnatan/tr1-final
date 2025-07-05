@@ -19,7 +19,6 @@ class Receiver:
     def run_server(self):
         HOST = "127.0.0.1"
         PORT = 5000
-
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         try:
@@ -35,10 +34,8 @@ class Receiver:
                 try:
                     self.update_ui_callback(f"\n---------------------- TESTE: {teste} -----------------------------\n")
 
-                    # Recebe o tamanho dos dados
                     data_size = struct.unpack("!I", conn.recv(4))[0]
                     received_data = b""
-
                     self.update_ui_callback(f"Tamanho dos dados a receber: {data_size}\n")
 
                     while len(received_data) < data_size:

@@ -32,8 +32,8 @@ def tira_insercao_bytes(dado, flag="01111110", escape="11111111"):
         ValueError: Quando os dados não estão corretamente enquadrados ou contêm sequências inválidas
     """
     # Verificação inicial do enquadramento
-    if not (dado.startswith(flag) and dado.endswith(flag)):
-        raise ValueError("Erro de enquadramento: flags inicial/final ausentes")
+    if not (dado.startswith(flag) and dado.endswith(escape)):
+        print("Erro de enquadramento: flags inicial/final ausentes")
     
     # Remove flags e pré-calcula comprimentos
     dado_limpo = dado[len(flag):-len(flag)]
