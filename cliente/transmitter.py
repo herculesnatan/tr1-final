@@ -23,7 +23,7 @@ class Transmitter:
         elif self.modulation_type == "Bipolar":
             return bipolar_modulation(data)
         else:
-            raise ValueError("Tipo de modulação digital não suportado.")
+            print("Tipo de modulação digital não suportado.")
         
     def carrier_modulate(self, data: np.ndarray) -> np.ndarray:
         """Aplica a modulação da portadora escolhida."""
@@ -34,7 +34,7 @@ class Transmitter:
         elif self.carrier_modulation_type == "8QAM":
             return modulation_8qam(data)
         else:
-            raise ValueError("Tipo de modulação por portadora não suportado.")
+            print("Tipo de modulação por portadora não suportado.")
     
     def send(self, signal, modulacao, enquadramento, deteccao, nome):
         HOST = '127.0.0.1'
