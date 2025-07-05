@@ -32,11 +32,13 @@ class Receiver:
                 print(f"Conexão estabelecida com {addr}")
 
                 try:
-                    self.update_ui_callback(f"\n---------------------- TESTE: {teste} -----------------------------\n")
+                    _ = f"TRANSMISSÃO: {teste}"
+                    self.update_ui_callback("\n" + "-" * 75)
+                    self.update_ui_callback(_.center(75))
+                    self.update_ui_callback("-" * 75 + "\n")
 
                     data_size = struct.unpack("!I", conn.recv(4))[0]
                     received_data = b""
-                    self.update_ui_callback(f"Tamanho dos dados a receber: {data_size}\n")
 
                     while len(received_data) < data_size:
                         packet = conn.recv(1024)
@@ -66,7 +68,11 @@ class Receiver:
                     else:
                         raise ValueError("Modulação desconhecida")
 
-                    self.update_ui_callback("====== NOVA MENSAGEM RECEBIDA ======\n")
+                    _ = "NOVA MENSAGEM RECEBIDA"
+                    self.update_ui_callback("\n" + "-" * 75)
+                    self.update_ui_callback(_.center(75))
+                    self.update_ui_callback("-" * 75 + "\n")
+
                     self.update_ui_callback(f"Usuário: {received_json.get('nome')}\n")
                     self.update_ui_callback(f"Sinal demodulado: {' '.join(str(bit) for bit in signal)}\n")
 
@@ -102,7 +108,7 @@ class Receiver:
                         mensagem = binario_para_texto(dado_corrigido)
                         self.update_ui_callback(f"Mensagem recebida: {mensagem}\n")
                         if erro != "nada":
-                            self.update_ui_callback(f"{erro}\n")
+                            self.update_ui_callback(f"\n{erro}\n")
                     except Exception as e:
                         self.update_ui_callback(f"Erro ao aplicar Hamming: {e}\n")
 
