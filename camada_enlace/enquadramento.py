@@ -12,7 +12,7 @@ def contagem_caracteres(dado, tamanho):
 
     return f"{tamanho_binario_ascii}{dado_ruido}"
 
-def insercao_bytes(dado, flag="01111110", escape="111111"):
+def insercao_bytes(dado, flag="01111110", escape="11111111"):
 
     # Inicializar dados enquadrados
     dados_enquadrados = ""
