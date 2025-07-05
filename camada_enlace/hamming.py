@@ -63,18 +63,21 @@ def hamming_encode_receptor(received_data):
                 parity ^= data[j - 1]
         if parity != 0:
             error_pos += parity_pos
-
+ 
     # Corrige o erro, se encontrado
     if error_pos > 0:
         print(f"Erro encontrado na posição: {error_pos}")
         data[error_pos - 1] ^= 1  # Inverte o bit com erro
+        error_detected = "houve um bit alterado e corrigido durante a transmissão"
+    
     else:
         print("Nenhum erro encontrado na mensagem.")
+        error_detected = "nada"
     
     # Retorna a mensagem corrigida (sem bits de paridade)
     corrected_message = []
     for i in range(1, len(data) + 1):
         if i & (i - 1) != 0:  # Ignora as posições de paridade
             corrected_message.append(data[i - 1])
-    
-    return ''.join(map(str, corrected_message))
+
+    return ''.join(map(str, corrected_message)), error_detected 
