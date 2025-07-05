@@ -68,7 +68,7 @@ class Receiver:
                         elif received_json['enquadramento'] == 'Inserção de bytes':
                             desenquadramento = tira_insercao_bytes(''.join(map(str, signal)))
                         else:
-                            raise ValueError("Método de enquadramento desconhecido")
+                            print("Método de enquadramento desconhecido")
                         self.update_ui_callback(f"Sinal desenquadrado: {desenquadramento}")
 
 
@@ -82,7 +82,7 @@ class Receiver:
                             erro_detectado, resultado, resto = crc_receptor(desenquadramento)
                             self.update_ui_callback(f"{resultado}, resultado do CRC: {resto} \n")
                         else:
-                            raise ValueError("Método de detecção desconhecido \n")
+                            print("Método de detecção desconhecido \n")
                         
                         self.update_ui_callback(f"Mensagem sem os bits de detcção: {erro_detectado} \n")
 
