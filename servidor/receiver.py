@@ -25,7 +25,7 @@ class Receiver:
             server.bind((HOST, PORT))
             server.listen(5)
             print(f"Servidor ouvindo em {HOST}:{PORT}")
-
+            teste = 1
             while True:
                 conn, addr = server.accept()
                 print(f"Conexão estabelecida com {addr}")
@@ -37,6 +37,9 @@ class Receiver:
                         if not packet:
                             break
                         received_data += packet
+                    if len(received_data) < data_size:
+                        print("Dados recebidos incompletos. Conexão encerrada prematuramente.")
+                        break
 
                     if received_data:
                         received_json = json.loads(received_data.decode('utf-8'))
@@ -54,6 +57,7 @@ class Receiver:
                             signal = fsk_demodulation(time, sinal_lista)
                         elif received_json["modulacao"] == "8QAM":
                             signal = qam_demodulation(signal[0], signal[1])
+                        self.update_ui_callback(f"---------------------- teste : {teste} ----------------------------- \n")
                         self.update_ui_callback(f"Usuário: {received_json.get('nome')} \n")
                         #self.update_ui_callback(f"sinal: {received_json.get('signal')} \n")
                         self.update_ui_callback(f'Sinal demodulado: {" ".join(str(bit) for bit in signal)} \n')
@@ -82,13 +86,18 @@ class Receiver:
                         
                         self.update_ui_callback(f"Mensagem sem os bits de detcção: {erro_detectado} \n")
 
-                        dado_corrigido = hamming_encode_receptor(erro_detectado)
+                        dado_corrigido, erro = hamming_encode_receptor(erro_detectado)
                         self.update_ui_callback(f"Mensagem sem os bits de correção: {dado_corrigido} \n")
 
-                        mensagem = binario_para_texto(dado_corrigido)
-                        self.update_ui_callback(f"Mensagem recebida: {mensagem} \n")
+                        if erro == "nada":
+                            mensagem = binario_para_texto(dado_corrigido)
+                            self.update_ui_callback(f"Mensagem recebida: {mensagem} \n")
+                        else:
+                            mensagem = binario_para_texto(dado_corrigido)
+                            self.update_ui_callback(f"Mensagem recebida: {mensagem} \n")
+                            self.update_ui_callback(f"{erro} \n")
+                        teste += 1
                         
-
                 except Exception as e:
                     print(f"Erro ao processar dados: {e}")
                 finally:
