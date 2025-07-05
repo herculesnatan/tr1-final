@@ -22,28 +22,36 @@ class Receiver:
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         try:
+            # self.update_ui_callback(f"Tentando fazer bind no socket... \n") # meus "prints"
             server.bind((HOST, PORT))
             server.listen(5)
             print(f"Servidor ouvindo em {HOST}:{PORT}")
             teste = 1
             while True:
+                
+                # self.update_ui_callback(f"Aguardando conexão...\n") #print 2
                 conn, addr = server.accept()
                 print(f"Conexão estabelecida com {addr}")
                 try:
+                    self.update_ui_callback(f"---------------------- teste : {teste} ----------------------------- \n")
+                    # self.update_ui_callback(f"Aguardando tamanho dos dados...\n") #print 3
                     data_size = struct.unpack("!I", conn.recv(4))[0]
                     received_data = b""
+                    self.update_ui_callback(f"Tamanho dos dados a receber: {data_size}\n") #print 4
                     while len(received_data) < data_size:
+                        #self.update_ui_callback(f"Recebendo dados...\n") #print 5
                         packet = conn.recv(1024)
                         if not packet:
+                            self.update_ui_callback(f"Dados recebidos incompletos \n")
                             break
                         received_data += packet
                     if len(received_data) < data_size:
-                        print("Dados recebidos incompletos. Conexão encerrada prematuramente.")
-                        break
+                        self.update_ui_callback(f"Dados recebidos incompletos. Conexão encerrada prematuramente. \n")
+                        continue
 
                     if received_data:
                         received_json = json.loads(received_data.decode('utf-8'))
-                        print(f"Dados recebidos: {received_json}")
+                        # self.update_ui_callback(f"Dados recebidos \n")
 
                         #pega o sinal do Objeto:
                         signal = received_json.get('signal')
@@ -57,7 +65,6 @@ class Receiver:
                             signal = fsk_demodulation(time, sinal_lista)
                         elif received_json["modulacao"] == "8QAM":
                             signal = qam_demodulation(signal[0], signal[1])
-                        self.update_ui_callback(f"---------------------- teste : {teste} ----------------------------- \n")
                         self.update_ui_callback(f"Usuário: {received_json.get('nome')} \n")
                         #self.update_ui_callback(f"sinal: {received_json.get('signal')} \n")
                         self.update_ui_callback(f'Sinal demodulado: {" ".join(str(bit) for bit in signal)} \n')
@@ -69,7 +76,7 @@ class Receiver:
                             desenquadramento = tira_insercao_bytes(''.join(map(str, signal)))
                         else:
                             raise ValueError("Método de enquadramento desconhecido")
-                        self.update_ui_callback(f"Sinal desenquadrado: {desenquadramento}")
+                        self.update_ui_callback(f"Sinal desenquadrado: {desenquadramento} \n")
 
 
                         #Analisa o tipo de detecção de erro utilizada:
@@ -84,7 +91,7 @@ class Receiver:
                         else:
                             raise ValueError("Método de detecção desconhecido \n")
                         
-                        self.update_ui_callback(f"Mensagem sem os bits de detcção: {erro_detectado} \n")
+                        self.update_ui_callback(f"Mensagem sem os bits de detecção: {erro_detectado} \n")
 
                         dado_corrigido, erro = hamming_encode_receptor(erro_detectado)
                         self.update_ui_callback(f"Mensagem sem os bits de correção: {dado_corrigido} \n")

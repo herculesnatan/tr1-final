@@ -68,7 +68,7 @@ def hamming_encode_receptor(received_data):
     if error_pos > 0:
         print(f"Erro encontrado na posição: {error_pos}")
         data[error_pos - 1] ^= 1  # Inverte o bit com erro
-        error_detected = "houve um bit alterado e corrigido durante a transmissão"
+        error_detected = "Obs: durante o procedimento um bit veio alterado e foi corrigido pelos métodos escolhidos"
     
     else:
         print("Nenhum erro encontrado na mensagem.")
