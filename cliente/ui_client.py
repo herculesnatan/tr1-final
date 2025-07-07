@@ -202,6 +202,12 @@ class ClientUI(Gtk.Window):
             self.plot_ondas(carrier_signal, f"Portadora - {carrier_modulation_type}", ax2)
 
         self.figure.tight_layout()
+        
+        
+        # Remover todos os filhos antes de adicionar o novo canvas
+        for child in self.graph_scroll.get_children():
+            self.graph_scroll.remove(child)
+
         self.canvas = FigureCanvas(self.figure)
         self.graph_scroll.add_with_viewport(self.canvas)
         self.canvas.show()
